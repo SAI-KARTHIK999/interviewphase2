@@ -1,0 +1,47 @@
+﻿# General
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-wheel-metadata/
+*.egg-info/
+*.egg
+.eggs/
+pytest_cache/
+
+# Env
+.env
+.env.*
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+*.swp
+*~
+
+# Logs
+logs/
+*.log
+
+# Others
+coverage/
+.cache/

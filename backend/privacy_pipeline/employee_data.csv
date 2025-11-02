@@ -1,0 +1,6 @@
+EmployeeID,Name,Email,Address,Department,Age,Salary,Experience,Gender
+101,John Doe,j.doe@example.com,"123 Maple St, Anytown",Sales,34,70000,5,Male
+102,Jane Smith,j.smith@example.com,"456 Oak Ave, Anytown",Engineering,28,85000,3,Female
+103,Peter Jones,p.jones@example.com,"789 Pine Ln, Anytown",Sales,45,90000,15,Male
+104,Mary Williams,m.williams@example.com,"321 Elm Rd, Anytown",HR,39,65000,10,Female
+105,David Brown,d.brown@example.com,"654 Cedar Blvd, Anytown",Engineering,31,95000,7,Male

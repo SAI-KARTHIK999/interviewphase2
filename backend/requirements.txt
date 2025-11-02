@@ -1,0 +1,11 @@
+flask
+flask-cors
+pymongo
+werkzeug
+opencv-python-headless
+moviepy
+whisper @ git+https://github.com/openai/whisper.git
+ffmpeg-python
+spacy
+scikit-learn
+deepface

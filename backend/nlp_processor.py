@@ -1,4 +1,6 @@
 import os
+import logging
+import tempfile
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -8,9 +10,21 @@ import cv2  # OpenCV for video processing
 from deepface import DeepFace # The DeepFace library
 import subprocess
 
-# --- Load Models ---
-nlp = spacy.load("en_core_web_sm")
-whisper_model = whisper.load_model("medium")
+# --- Load Models (lazily) ---
+nlp = None
+whisper_model = None
+
+def get_nlp():
+    global nlp
+    if nlp is None:
+        nlp = spacy.load("en_core_web_sm")
+    return nlp
+
+def get_whisper_model():
+    global whisper_model
+    if whisper_model is None:
+        whisper_model = whisper.load_model("medium")
+    return whisper_model
 
 # --- NEW Facial Analysis Function ---
 def analyze_facial_expressions(video_filepath):
@@ -123,7 +137,7 @@ def transcribe_video(video_filepath):
         
         # Load model with optimized settings
         logger.info("Initializing Whisper model...")
-        model = whisper.load_model("medium")
+        model = get_whisper_model()
         
         # Transcribe with optimized parameters
         logger.info("Starting transcription...")
@@ -169,7 +183,7 @@ def anonymize_text(text):
     if not text or not isinstance(text, str):
         return text
 
-    doc = nlp(text)
+    doc = get_nlp()(text)
     anonymized = []
     last_end = 0
     

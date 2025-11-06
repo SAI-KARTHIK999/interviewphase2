@@ -154,13 +154,15 @@ function Interview() {
         <div className="webcam-container">
           <Webcam 
             audio={{
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-              suppressLocalAudioPlayback: true  // This prevents audio playback through speakers
+              echoCancellation: { exact: true },
+              noiseSuppression: { exact: true },
+              autoGainControl: { exact: true },
+              sampleRate: 48000,
+              channelCount: 1
             }}
             ref={webcamRef} 
             width="100%"
+            muted={true}
             videoConstraints={{
               facingMode: 'user',
               width: 1280,

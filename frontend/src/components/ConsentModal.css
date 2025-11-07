@@ -26,16 +26,29 @@
 }
 
 .consent-modal {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #1A1A1A;
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 20px;
   max-width: 900px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 4px 20px rgba(212, 175, 55, 0.15);
   animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  color: var(--fg);
+  color: #F5F5F5;
+  position: relative;
+}
+
+.consent-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #D4AF37, #B45309);
+  opacity: 0.8;
+  border-radius: 20px 20px 0 0;
 }
 
 @keyframes modalFadeIn {
@@ -52,27 +65,25 @@
 /* Header */
 .consent-modal-header {
   padding: 2.5rem 2.5rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(99, 102, 241, 0.05));
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(212, 175, 55, 0.05);
   border-radius: 20px 20px 0 0;
   text-align: center;
 }
 
 .consent-modal-header h2 {
   margin: 0 0 1rem;
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--fg), var(--primary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #F5F5F5;
+  letter-spacing: -0.02em;
 }
 
 .consent-intro {
   margin: 0;
   font-size: 1.125rem;
-  color: var(--muted);
-  line-height: 1.6;
+  color: #9CA3AF;
+  line-height: 1.7;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
@@ -81,15 +92,16 @@
 /* Data Info Section */
 .consent-data-info {
   padding: 2rem 2.5rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #242424;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .consent-data-info h3 {
   margin: 0 0 1.25rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--fg);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #D4AF37;
+  letter-spacing: -0.01em;
 }
 
 .data-items {

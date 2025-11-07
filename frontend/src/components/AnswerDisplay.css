@@ -1,4 +1,4 @@
-/* Answer Display Component Styles */
+/* Answer Display Component - Executive Dark Mode */
 
 .answer-display-container {
   max-width: 1000px;
@@ -8,59 +8,76 @@
 
 .no-answer {
   text-align: center;
-  color: #64748b;
+  color: #9CA3AF;
   padding: 40px;
   font-size: 16px;
 }
 
-/* Section Styling */
+/* Executive Section Styling */
 .original-text-section,
 .tokens-section {
-  background: #ffffff;
+  background: #1A1A1A;
   border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.original-text-section::before,
+.tokens-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #D4AF37, #B45309);
+  opacity: 0.6;
 }
 
 .original-text-section:hover,
 .tokens-section:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.2);
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .section-header h3 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 22px;
+  font-weight: 700;
+  color: #F5F5F5;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  letter-spacing: -0.01em;
 }
 
-/* Original Text Section */
+/* Executive Original Text Section */
 .original-text-box {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-left: 4px solid #3b82f6;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 12px;
+  background: #242424;
+  border-left: 4px solid #D4AF37;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .original-text {
   font-size: 16px;
-  line-height: 1.8;
-  color: #1e293b;
+  line-height: 1.9;
+  color: #F5F5F5;
   margin: 0;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -69,22 +86,23 @@
 .confidence-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  padding: 6px 16px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #0F0F0F;
   border-radius: 20px;
   font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .timestamp {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
-  color: #64748b;
-  margin-top: 8px;
+  color: #9CA3AF;
+  margin-top: 10px;
+  font-weight: 500;
 }
 
 .timestamp-icon {
@@ -101,30 +119,33 @@
 .token-count-badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1e40af;
+  padding: 6px 14px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  color: #D4AF37;
   border-radius: 16px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
 }
 
 .toggle-tokens-btn {
-  padding: 4px 12px;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  padding: 6px 14px;
+  background: #242424;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
-  color: #475569;
+  font-weight: 600;
+  color: #9CA3AF;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toggle-tokens-btn:hover {
-  background: #e2e8f0;
-  border-color: #94a3b8;
+  background: rgba(212, 175, 55, 0.1);
+  border-color: #D4AF37;
+  color: #D4AF37;
+  transform: translateY(-1px);
 }
 
 .toggle-tokens-btn:active {
@@ -134,13 +155,14 @@
 .tokens-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 20px;
+  background: #242424;
+  border-radius: 10px;
   max-height: 400px;
   overflow-y: auto;
   animation: slideDown 0.3s ease-out;
+  border: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 @keyframes slideDown {
@@ -157,24 +179,24 @@
 .token-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  padding: 7px 13px;
+  background: #1A1A1A;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 8px;
   font-size: 14px;
-  color: #334155;
+  color: #D1D5DB;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   cursor: default;
-  transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .token-badge:hover {
-  background: #eff6ff;
-  border-color: #3b82f6;
-  color: #1e40af;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  background: rgba(212, 175, 55, 0.1);
+  border-color: #D4AF37;
+  color: #D4AF37;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 /* Scores Section */
@@ -192,32 +214,34 @@
 .embedding-badge {
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
-  border-radius: 8px;
+  padding: 8px 18px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10B981;
+  border-radius: 10px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
 }
 
-/* Scrollbar Styling */
+/* Executive Scrollbar Styling */
 .tokens-grid::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 .tokens-grid::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
+  background: #1A1A1A;
+  border-radius: 5px;
 }
 
 .tokens-grid::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 5px;
+  border: 2px solid #1A1A1A;
 }
 
 .tokens-grid::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(212, 175, 55, 0.5);
 }
 
 /* Responsive Design */

@@ -1,26 +1,108 @@
-/* Base document styles (light-weight replacement for Tailwind directives in this project) */
+/* Executive Dark Mode Theme - Premium & Professional */
 :root {
-  --bg-900: #0f1724;
-  --bg-800: #111827;
-  --fg: #e6eef8;
-  --muted: #9ca3af;
-  --primary: #4f46e5;
+  /* Executive Dark Background */
+  --bg-primary: #0F0F0F;
+  --bg-secondary: #1A1A1A;
+  --bg-elevated: #242424;
+  
+  /* Royal Gold & Bronze Accents */
+  --accent-gold: #D4AF37;
+  --accent-bronze: #B45309;
+  --accent-gold-hover: #E5C158;
+  --accent-bronze-hover: #C56410;
+  
+  /* Steel Gray */
+  --steel-gray: #9CA3AF;
+  --steel-gray-light: #B8BFC7;
+  --steel-gray-dark: #6B7280;
+  
+  /* Text Colors */
+  --text-primary: #F5F5F5;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
+  
+  /* Semantic Colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
+  
+  /* Borders & Dividers */
+  --border-subtle: rgba(212, 175, 55, 0.1);
+  --border-medium: rgba(212, 175, 55, 0.2);
+  --border-strong: rgba(212, 175, 55, 0.3);
+  
+  /* Shadows - Metallic & Premium */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+  --shadow-bronze: 0 4px 20px rgba(180, 83, 9, 0.15);
+  
+  /* Effects */
   --radius: 12px;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --backdrop-blur: blur(12px);
+  
+  /* Gradients */
+  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+  --gradient-bronze: linear-gradient(135deg, #B45309 0%, #D97706 100%);
+  --gradient-dark: linear-gradient(180deg, #0F0F0F 0%, #1A1A1A 100%);
+  --gradient-overlay: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(180, 83, 9, 0.05) 100%);
 }
 
-html, body, #root { height: 100%; }
+html, body, #root { 
+  height: 100%; 
+  margin: 0;
+  padding: 0;
+}
 
-body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: linear-gradient(180deg,var(--bg-900), var(--bg-800)); color:var(--fg); }
+body { 
+  margin: 0; 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
 
-/* Small utilities often used across components */
-.muted { color: var(--muted); }
+/* Executive Utilities */
+.muted { color: var(--text-muted); }
 .text-center { text-align: center; }
-.flex { display:flex; }
-.flex-col { display:flex; flex-direction:column; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
 .gap-2 { gap: 0.5rem; }
 .gap-4 { gap: 1rem; }
 .rounded { border-radius: var(--radius); }
-.shadow-sm { box-shadow: 0 6px 18px rgba(2,6,23,0.36); }
 
-/* Simple responsive helpers */
-@media (max-width: 600px) { .hide-sm { display:none !important; } }
+/* Executive Shadows */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-gold { box-shadow: var(--shadow-gold); }
+
+/* Metallic Highlights */
+.metallic-border {
+  border: 1px solid var(--border-medium);
+  position: relative;
+}
+
+.metallic-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  opacity: 0.5;
+}
+
+/* Smooth Transitions */
+.transition-smooth { transition: var(--transition-smooth); }
+
+/* Responsive helpers */
+@media (max-width: 600px) { 
+  .hide-sm { display: none !important; } 
+}

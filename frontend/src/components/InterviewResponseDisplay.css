@@ -1,0 +1,320 @@
+/* Interview Response Display Component Styles */
+
+.interview-response-display {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin: 20px 0;
+  transition: all 0.3s ease;
+}
+
+.interview-response-display:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Response Header */
+.response-header {
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.response-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.response-id {
+  font-family: 'Courier New', monospace;
+  color: #666;
+  background: #f5f5f5;
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.response-date,
+.response-score {
+  color: #444;
+  font-weight: 500;
+}
+
+.response-score {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+/* Question Section */
+.response-question {
+  background: #f8f9fa;
+  border-left: 4px solid #2196F3;
+  padding: 16px;
+  margin-bottom: 24px;
+  border-radius: 4px;
+}
+
+.response-question h3 {
+  margin: 0 0 8px 0;
+  color: #2196F3;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.response-question p {
+  margin: 0;
+  color: #333;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Response Sections (Transcribed & Anonymized) */
+.response-section {
+  margin-bottom: 24px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.response-section.transcribed {
+  background: #e3f2fd;
+  border-color: #2196F3;
+}
+
+.response-section.anonymized {
+  background: #f3e5f5;
+  border-color: #9C27B0;
+}
+
+.response-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-original {
+  background: #2196F3;
+  color: white;
+}
+
+.badge-anonymized {
+  background: #9C27B0;
+  color: white;
+}
+
+/* Section Content */
+.section-content {
+  background: white;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.response-text {
+  margin: 0 0 12px 0;
+  line-height: 1.8;
+  color: #333;
+  font-size: 15px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.text-info {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #666;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.no-data {
+  color: #999;
+  font-style: italic;
+  margin: 0;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Comparison Section */
+.comparison-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.comparison-header {
+  margin-bottom: 16px;
+}
+
+.comparison-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.comparison-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-label {
+  font-size: 12px;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Feedback Section */
+.response-feedback {
+  background: #fffde7;
+  border-left: 4px solid #FFC107;
+  padding: 16px;
+  margin-bottom: 24px;
+  border-radius: 4px;
+}
+
+.response-feedback h3 {
+  margin: 0 0 12px 0;
+  color: #F57C00;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.response-feedback p {
+  margin: 0;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Facial Analysis Section */
+.response-facial-analysis {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.response-facial-analysis h3 {
+  margin: 0 0 12px 0;
+  color: #555;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.response-facial-analysis pre {
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  border: 1px solid #ddd;
+}
+
+/* Retention Info */
+.retention-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+  color: #c62828;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.retention-icon {
+  font-size: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .interview-response-display {
+    padding: 16px;
+  }
+
+  .response-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .comparison-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .text-info {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.interview-response-display {
+  animation: fadeIn 0.4s ease-out;
+}

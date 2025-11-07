@@ -36,6 +36,7 @@ try:
     db = client['interview_db']
     interviews = db['interviews']
     deletion_log = db['deletion_log']
+    user_consent_logs = db['user_consent_logs']
     
     print("✓ Connected to MongoDB at mongodb://localhost:27017/")
     print(f"✓ Using database: interview_db, collection: interviews")
@@ -47,11 +48,21 @@ try:
         print(f"✓ TTL index created: Data auto-deletes after {RETENTION_DAYS} days")
     except Exception as idx_error:
         print(f"⚠️  TTL index warning: {idx_error}")
+    
+    # Setup indexes for user_consent_logs collection
+    try:
+        user_consent_logs.create_index("user_id")
+        user_consent_logs.create_index("timestamp")
+        user_consent_logs.create_index([("user_id", 1), ("timestamp", -1)])
+        print("✓ Consent logs indexes created")
+    except Exception as idx_error:
+        print(f"⚠️  Consent logs index warning: {idx_error}")
 except Exception as e:
     print(f"✗ Warning: Could not connect to MongoDB: {e}")
     print(f"✓ Fallback: Using JSON file storage at {JSON_STORAGE_FILE}")
     interviews = None
     deletion_log = None
+    user_consent_logs = None
 
 # Import NLP/CV functions with graceful degradation
 try:
@@ -96,6 +107,77 @@ def home():
 @app.route('/api/status', methods=['GET'])
 def get_status():
     return jsonify({"status": "Backend server is running!"})
+
+@app.route('/api/consent', methods=['POST'])
+def handle_consent():
+    """Handle user consent before interview session begins"""
+    try:
+        data = request.get_json()
+        
+        # Extract consent data
+        user_id = data.get('user_id', f"user_{int(datetime.utcnow().timestamp())}")
+        allow_audio = data.get('allow_audio', False)
+        allow_video = data.get('allow_video', False)
+        allow_storage = data.get('allow_storage', False)
+        session_mode = data.get('session_mode', 'practice')  # 'record' or 'practice'
+        
+        # Create consent record
+        consent_record = {
+            "consent_id": f"consent_{int(datetime.utcnow().timestamp())}_{os.urandom(4).hex()}",
+            "user_id": user_id,
+            "allow_audio": allow_audio,
+            "allow_video": allow_video,
+            "allow_storage": allow_storage,
+            "session_mode": session_mode,
+            "timestamp": datetime.utcnow(),
+            "ip_address": request.remote_addr,
+            "user_agent": request.headers.get('User-Agent', 'Unknown')
+        }
+        
+        # Store consent in MongoDB
+        if user_consent_logs is not None:
+            try:
+                result = user_consent_logs.insert_one(consent_record.copy())
+                print(f"✓ Consent logged: {consent_record['consent_id']} for user {user_id}")
+                consent_record['_id'] = str(result.inserted_id)
+            except Exception as e:
+                print(f"✗ Failed to log consent to MongoDB: {e}")
+        else:
+            # Fallback to JSON file
+            consent_log_file = os.path.join(DATA_FOLDER, 'consent_logs.json')
+            try:
+                with open(consent_log_file, 'a', encoding='utf-8') as f:
+                    json.dump({
+                        **consent_record,
+                        'timestamp': consent_record['timestamp'].isoformat()
+                    }, f, ensure_ascii=False)
+                    f.write('\n')
+                print(f"✓ Consent logged to JSON file for user {user_id}")
+            except Exception as e:
+                print(f"✗ Failed to log consent to JSON: {e}")
+        
+        # Determine session mode based on consent
+        if not allow_audio and not allow_video:
+            session_mode = 'practice'
+        elif allow_audio or allow_video:
+            session_mode = 'record'
+        
+        return jsonify({
+            "status": "success",
+            "consent_id": consent_record['consent_id'],
+            "user_id": user_id,
+            "session_mode": session_mode,
+            "message": f"Consent recorded. Session mode: {session_mode}",
+            "permissions": {
+                "audio": allow_audio,
+                "video": allow_video,
+                "storage": allow_storage
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Error handling consent: {str(e)}")
+        return jsonify({"error": f"Consent processing failed: {str(e)}"}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -177,7 +259,10 @@ def delete_user_data():
             
             # Delete video files
             for doc in docs_to_delete:
-                video_path = doc.get('video_filepath')
+                # Prefer stored path; otherwise reconstruct from filename
+                video_path = doc.get('video_filepath') or (
+                    os.path.join(app.config['UPLOAD_FOLDER'], doc.get('video_filename', '')) if doc.get('video_filename') else None
+                )
                 if video_path and os.path.exists(video_path):
                     try:
                         os.remove(video_path)
@@ -267,22 +352,63 @@ def get_retention_info():
 @app.route('/api/interview/video', methods=['POST'])
 def handle_video_interview():
     try:
+        print("\n" + "="*50)
+        print("📹 Video Upload Request Received")
+        print("="*50)
+        
+        # --- Consent & data handling flags (required) ---
+        consent_record = (request.form.get('consent_record', 'false').lower() == 'true')
+        consent_analyze = (request.form.get('consent_analyze', 'false').lower() == 'true')
+        opt_in_save = (request.form.get('opt_in_data_save', 'false').lower() == 'true')
+        opt_in_share = (request.form.get('opt_in_data_share', 'false').lower() == 'true')
+        consent_version = request.form.get('consent_version', 'v1')
+        consent_id = request.form.get('consent_id', None)
+        user_id_form = request.form.get('user_id', None)
+        # --- Question context (optional but recommended) ---
+        question_id = request.form.get('question_id')
+        question_text = request.form.get('question_text')
+        
+        print(f"Consent Record: {consent_record}")
+        print(f"Consent Analyze: {consent_analyze}")
+        print(f"Opt-in Save: {opt_in_save}")
+        print(f"Consent ID: {consent_id}")
+        print(f"User ID: {user_id_form}")
+        print(f"Question ID: {question_id}")
+        print(f"Question Text: {question_text}")
+
+        if not (consent_record and consent_analyze):
+            print("❌ Consent validation failed")
+            return jsonify({
+                "error": "Consent required",
+                "hint": "You must consent to recording and analysis to proceed."
+            }), 400
+
         if 'video' not in request.files:
+            print("❌ No video file in request")
+            print("Available form fields:", list(request.form.keys()))
+            print("Available files:", list(request.files.keys()))
             return jsonify({"error": "No video file provided"}), 400
         
         file = request.files['video']
         if file.filename == '':
+            print("❌ Empty filename")
             return jsonify({"error": "No selected file"}), 400
+        
+        print(f"✓ Video file received: {file.filename}")
 
         # Check file size before processing
         file.seek(0, 2)  # Seek to end
         file_size = file.tell()
         file.seek(0)  # Reset to beginning
         
+        print(f"File size: {file_size / 1024 / 1024:.2f} MB")
+        
         if file_size > app.config['MAX_CONTENT_LENGTH']:
+            print("❌ File too large")
             return jsonify({"error": "File too large. Maximum size is 50MB"}), 413
             
         if file_size < 1024:  # Less than 1KB
+            print("❌ File too small")
             return jsonify({"error": "File too small. Please upload a valid video file"}), 400
 
         # Use secure filename with timestamp to avoid conflicts
@@ -292,26 +418,38 @@ def handle_video_interview():
         filename = f"{timestamp}_{original_filename}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         
+        print(f"Saving to: {filepath}")
+        
         # Stream save for better memory usage with large files
-        with open(filepath, 'wb') as f:
-            while True:
-                chunk = file.stream.read(8192)  # Read in 8KB chunks
-                if not chunk:
-                    break
-                f.write(chunk)
+        try:
+            with open(filepath, 'wb') as f:
+                while True:
+                    chunk = file.stream.read(8192)  # Read in 8KB chunks
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            print(f"✓ File saved successfully")
+        except Exception as e:
+            print(f"❌ Error saving file: {e}")
+            return jsonify({"error": f"Failed to save file: {str(e)}"}), 500
         
         # --- Analysis Pipeline (with error handling) ---
+        print("\n🔍 Starting analysis pipeline...")
         try:
+            print("  - Transcribing video...")
             transcribed_text = transcribe_video(filepath)
+            print(f"  ✓ Transcription: {transcribed_text[:100]}..." if len(transcribed_text) > 100 else f"  ✓ Transcription: {transcribed_text}")
         except Exception as e:
             transcribed_text = f"Transcription failed: {e}"
-        print(f"Transcribed Text: {transcribed_text}")
+            print(f"  ⚠️ Transcription warning: {e}")
         
         try:
+            print("  - Analyzing facial expressions...")
             facial_analysis = analyze_facial_expressions(filepath)
+            print(f"  ✓ Facial analysis complete")
         except Exception as e:
             facial_analysis = {"error": f"facial analysis failed: {e}"}
-        print(f"Facial Analysis: {facial_analysis}")
+            print(f"  ⚠️ Facial analysis warning: {e}")
 
         try:
             anonymized_text = anonymize_text(transcribed_text)
@@ -319,13 +457,18 @@ def handle_video_interview():
             anonymized_text = transcribed_text
         
         try:
+            print("  - Assessing answer...")
             assessment = assess_answer(anonymized_text, interview_data["1"]["model_answer"])
+            print(f"  ✓ Assessment complete: Score = {assessment.get('score', 0.0)}")
         except Exception as e:
             assessment = {"score": 0.0, "feedback": f"Assessment failed: {e}"}
+            print(f"  ⚠️ Assessment warning: {e}")
 
         # Calculate deletion date
         created_at = datetime.utcnow()
         deletion_date = created_at + timedelta(days=RETENTION_DAYS)
+        
+        print(f"\n💾 Storage decision: {'SAVE' if opt_in_save else 'NO SAVE (immediate delete)'}")
         
         result_to_save = {
             "id": f"{timestamp}_{os.urandom(4).hex()}",
@@ -334,80 +477,124 @@ def handle_video_interview():
             "deletion_date": deletion_date.isoformat(),
             "days_until_deletion": RETENTION_DAYS,
             "question": interview_data["1"]["question"],
-            "transcribed_text": transcribed_text,
-            "anonymized_answer": anonymized_text,
+            # Store BOTH raw transcription and anonymized version
+            "transcribed_text": transcribed_text,      # ✅ Raw STT output (original speech)
+            "anonymized_answer": anonymized_text,      # ✅ Tokenized/anonymized version
+            "answer": anonymized_text,                 # ✅ Canonical answer field for simple queries
             "facial_analysis": facial_analysis,
             "score": assessment.get('score', 0.0),
             "feedback": assessment.get('feedback', ''),
             "video_filename": filename,
+            "video_filepath": filepath,
+            "video_mime": file.mimetype if hasattr(file, 'mimetype') else 'video/webm',
             "video_size_bytes": file_size,
-            "video_filepath": filepath
+            # question context
+            "question_id": question_id or "1",
+            "question": question_text or interview_data["1"]["question"],
+            # Link to consent record
+            "consent_id": consent_id,
+            "user_id": user_id_form,
+            "consent": {
+                "record": consent_record,
+                "analyze": consent_analyze,
+                "opt_in_save": opt_in_save,
+                "opt_in_share": opt_in_share,
+                "version": consent_version
+            }
         }
 
         saved_successfully = False
         storage_method = None
         
-        # Try MongoDB first
-        if interviews is not None:
+        if opt_in_save:
+            # Try MongoDB first
+            if interviews is not None:
+                try:
+                    result = interviews.insert_one(result_to_save.copy())
+                    saved_successfully = True
+                    storage_method = "MongoDB"
+                    print(f"✓ Successfully saved to MongoDB with ID: {result.inserted_id}")
+                    
+                    # Verify the save
+                    verify = interviews.find_one({"id": result_to_save["id"]})
+                    if verify:
+                        print(f"✓ Verified: Document exists in MongoDB")
+                    else:
+                        print(f"✗ Warning: Document not found in verification")
+                except Exception as e:
+                    print(f"✗ MongoDB save failed: {e}")
+                    print(f"→ Attempting JSON fallback...")
+            
+            # Fallback to JSON file storage
+            if not saved_successfully:
+                try:
+                    with open(JSON_STORAGE_FILE, 'a', encoding='utf-8') as f:
+                        json.dump(result_to_save, f, ensure_ascii=False)
+                        f.write('\n')
+                    saved_successfully = True
+                    storage_method = "JSON"
+                    print(f"✓ Successfully saved to JSON file: {JSON_STORAGE_FILE}")
+                    
+                    # Verify the save
+                    if os.path.exists(JSON_STORAGE_FILE):
+                        file_size_kb = os.path.getsize(JSON_STORAGE_FILE) / 1024
+                        print(f"✓ Verified: JSON file size: {file_size_kb:.2f} KB")
+                except Exception as e:
+                    print(f"✗ JSON save also failed: {e}")
+                    storage_method = "FAILED"
+        else:
+            # Do not persist; delete file immediately after analysis
             try:
-                result = interviews.insert_one(result_to_save.copy())
-                saved_successfully = True
-                storage_method = "MongoDB"
-                print(f"✓ Successfully saved to MongoDB with ID: {result.inserted_id}")
-                
-                # Verify the save
-                verify = interviews.find_one({"id": result_to_save["id"]})
-                if verify:
-                    print(f"✓ Verified: Document exists in MongoDB")
-                else:
-                    print(f"✗ Warning: Document not found in verification")
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                    print(f"✓ Deleted uploaded file immediately due to no-save consent: {filename}")
             except Exception as e:
-                print(f"✗ MongoDB save failed: {e}")
-                print(f"→ Attempting JSON fallback...")
+                print(f"✗ Failed to delete temporary file: {e}")
         
-        # Fallback to JSON file storage
-        if not saved_successfully:
-            try:
-                with open(JSON_STORAGE_FILE, 'a', encoding='utf-8') as f:
-                    json.dump(result_to_save, f, ensure_ascii=False)
-                    f.write('\n')
-                saved_successfully = True
-                storage_method = "JSON"
-                print(f"✓ Successfully saved to JSON file: {JSON_STORAGE_FILE}")
-                
-                # Verify the save
-                if os.path.exists(JSON_STORAGE_FILE):
-                    file_size_kb = os.path.getsize(JSON_STORAGE_FILE) / 1024
-                    print(f"✓ Verified: JSON file size: {file_size_kb:.2f} KB")
-            except Exception as e:
-                print(f"✗ JSON save also failed: {e}")
-                storage_method = "FAILED"
-        
-        if not saved_successfully:
-            print(f"✗ CRITICAL: Data not saved anywhere!")
+        if opt_in_save and not saved_successfully:
+            print(f"❍ CRITICAL: Data not saved anywhere though opt_in_save was true!")
             print(f"Data attempted to save: {result_to_save}")
         
-        # Clean up uploaded file after processing (optional)
-        # os.remove(filepath)  # Uncomment to delete after processing
-        
-        return jsonify({
+        response_data = {
             "assessment": assessment,
+            "saved_record": {
+                "question_id": result_to_save.get("question_id"),
+                "question": result_to_save.get("question"),
+                "timestamp": result_to_save.get("timestamp"),
+                "video_filename": result_to_save.get("video_filename"),
+                "id": result_to_save.get("id") if saved_successfully else None
+            },
             "storage": {
                 "saved": saved_successfully,
                 "method": storage_method,
-                "id": result_to_save["id"]
+                "id": result_to_save["id"] if saved_successfully else None
             },
+            "consent": result_to_save["consent"],
             "data_retention": {
                 "auto_deletion_days": RETENTION_DAYS,
-                "deletion_date": result_to_save['deletion_date'],
-                "message": f"Your data will be automatically deleted after {RETENTION_DAYS} days. Type 'Delete my data now' to delete immediately."
+                "deletion_date": result_to_save['deletion_date'] if saved_successfully else None,
+                "message": (f"Your data will be automatically deleted after {RETENTION_DAYS} days." if saved_successfully 
+                            else "Your data was not saved per your consent; video file has been deleted.")
             }
-        })
+        }
+        
+        print(f"\n✅ SUCCESS: Returning response to frontend")
+        print(f"Assessment score: {assessment.get('score', 0.0)}")
+        print(f"Storage saved: {saved_successfully}")
+        print("="*50 + "\n")
+        
+        return jsonify(response_data)
         
     except RequestEntityTooLarge:
+        print("❌ RequestEntityTooLarge error")
         return jsonify({"error": "File too large. Maximum size is 50MB"}), 413
     except Exception as e:
-        print(f"Error processing video upload: {str(e)}")
+        print(f"\n❌ ERROR processing video upload:")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        print("="*50 + "\n")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == '__main__':

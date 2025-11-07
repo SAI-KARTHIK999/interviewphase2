@@ -22,10 +22,10 @@ const Navbar = ({ user, onLogout }) => {
             <NavLink to="/" className="nav-link" end>Home</NavLink>
           </li>
           <li>
-            <NavLink to="/interview" className="nav-link">Interview</NavLink>
+            <NavLink to="/practice" className="nav-link">Practice</NavLink>
           </li>
           <li>
-            <NavLink to="/practice" className="nav-link">Practice</NavLink>
+            <NavLink to="/interview" className="nav-link">Interview</NavLink>
           </li>
           <li>
             <NavLink to="/profile" className="nav-link">Profile</NavLink>

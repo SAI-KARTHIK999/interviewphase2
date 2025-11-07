@@ -1,0 +1,44 @@
+{
+  "pii_storage_mode": "never_store_original",
+  "pii_redaction": {
+    "enabled": true,
+    "use_spacy_ner": true,
+    "redact_names": true,
+    "redact_locations": true,
+    "redact_organizations": false,
+    "redact_emails": true,
+    "redact_phones": true,
+    "redact_ssn": true,
+    "redact_credit_cards": true,
+    "redact_ids": true,
+    "redact_ip_addresses": false
+  },
+  "encryption": {
+    "enabled": false,
+    "algorithm": "AES-GCM",
+    "key_version": "v1",
+    "key_rotation_days": 90,
+    "vault_ttl_days": 7
+  },
+  "retention_policy": {
+    "text_retention_days": 30,
+    "analysis_retention_days": 90,
+    "vault_retention_days": 7,
+    "deletion_mode": "soft_delete_then_purge",
+    "purge_delay_days": 7
+  },
+  "consent_enforcement": {
+    "server_side_override": true,
+    "allow_anonymous_analysis": true,
+    "require_explicit_storage_consent": true
+  },
+  "security": {
+    "rate_limit_redaction": {
+      "enabled": true,
+      "max_text_length": 50000,
+      "timeout_seconds": 30
+    },
+    "vault_access_logging": true,
+    "audit_all_pii_operations": true
+  }
+}

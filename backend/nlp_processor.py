@@ -1,6 +1,7 @@
 import os
 import logging
 import tempfile
+import re
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -17,8 +18,26 @@ whisper_model = None
 def get_nlp():
     global nlp
     if nlp is None:
-        nlp = spacy.load("en_core_web_sm")
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except Exception:
+            # Fallback to a blank English pipeline if the model isn't available
+            nlp = spacy.blank("en")
     return nlp
+
+# --- Text normalization ---
+def normalize_text(text: str) -> str:
+    if not text or not isinstance(text, str):
+        return text
+    # Basic cleanup and normalization
+    text = text.strip()
+    # Collapse whitespace
+    text = re.sub(r"\s+", " ", text)
+    # Normalize dashes/quotes
+    text = text.replace("\u2013", "-").replace("\u2014", "-")
+    text = text.replace("\u2018", "'").replace("\u2019", "'")
+    text = text.replace('""', '"')
+    return text
 
 def get_whisper_model():
     global whisper_model
@@ -183,7 +202,17 @@ def anonymize_text(text):
     if not text or not isinstance(text, str):
         return text
 
-    doc = get_nlp()(text)
+    # Pre-mask direct identifiers (emails, phones, URLs)
+    patterns = {
+        r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}": "[EMAIL]",
+        r"\+?\d[\d\s().-]{7,}\d": "[PHONE]",
+        r"https?://\S+": "[URL]",
+    }
+    masked = text
+    for pat, repl in patterns.items():
+        masked = re.sub(pat, repl, masked)
+
+    doc = get_nlp()(masked)
     anonymized = []
     last_end = 0
     
@@ -192,7 +221,7 @@ def anonymize_text(text):
     
     for ent in ents:
         # Add text before the entity
-        anonymized.append(text[last_end:ent.start_char])
+        anonymized.append(masked[last_end:ent.start_char])
         
         # Replace entity based on its type
         if ent.label_ in ["PERSON", "ORG", "GPE", "LOC", "FAC", "PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE"]:
@@ -207,25 +236,78 @@ def anonymize_text(text):
             anonymized.append("[MONEY]")
         elif ent.label_ == "QUANTITY":
             anonymized.append("[QUANTITY]")
+        elif ent.label_ in ["CARDINAL", "ORDINAL"]:
+            anonymized.append(f"[{ent.label_}]")
         else:
             anonymized.append(ent.text)
             
         last_end = ent.end_char
     
     # Add remaining text
-    anonymized.append(text[last_end:])
-    return "".join(anonymized)
+    anonymized.append(masked[last_end:])
+    return normalize_text("".join(anonymized))
+
+def _compute_clarity_metrics(text: str) -> dict:
+    text = normalize_text(text or "")
+    sentences = re.split(r"[.!?]+\s*", text)
+    sentences = [s for s in sentences if s]
+    words = re.findall(r"\b\w+\b", text)
+    word_count = len(words)
+    avg_sentence_len = (word_count / len(sentences)) if sentences else word_count
+    filler_words = re.findall(r"\b(um|uh|like|you know|basically|actually|literally)\b", text, flags=re.I)
+    filler_ratio = len(filler_words) / max(1, word_count)
+    # Map to score 0..1 (shorter sentences and fewer fillers -> higher clarity)
+    clarity = max(0.0, min(1.0, 1.0 - (avg_sentence_len - 12) / 20 - filler_ratio * 3))
+    return {
+        "avg_sentence_len": round(avg_sentence_len, 2),
+        "filler_ratio": round(filler_ratio, 3),
+        "clarity_score": round(clarity, 2)
+    }
+
+def analyze_answer_quality(candidate_answer: str, model_answer: str) -> dict:
+    ca = normalize_text(candidate_answer or "")
+    ma = normalize_text(model_answer or "")
+    # Relevance via TF-IDF similarity
+    vectorizer = TfidfVectorizer().fit_transform([ca, ma])
+    sim = cosine_similarity(vectorizer.toarray())[0, 1]
+    clarity_metrics = _compute_clarity_metrics(ca)
+    clarity = clarity_metrics["clarity_score"]
+    # Content quality proxy: blend relevance and coverage by unique keywords overlap
+    ca_tokens = set(re.findall(r"\b\w+\b", ca.lower()))
+    ma_tokens = set(re.findall(r"\b\w+\b", ma.lower()))
+    if ma_tokens:
+        coverage = len(ca_tokens & ma_tokens) / len(ma_tokens)
+    else:
+        coverage = 0.0
+    content_quality = max(0.0, min(1.0, 0.6 * sim + 0.4 * coverage))
+    # Overall score weighting
+    overall = round(0.5 * content_quality + 0.3 * clarity + 0.2 * sim, 2)
+    feedback_parts = []
+    if sim > 0.6:
+        feedback_parts.append("High relevance to the question.")
+    elif sim > 0.3:
+        feedback_parts.append("Moderate relevance; add more specific details.")
+    else:
+        feedback_parts.append("Low relevance; address the question more directly.")
+    if clarity >= 0.7:
+        feedback_parts.append("Clear and well-structured explanation.")
+    elif clarity >= 0.4:
+        feedback_parts.append("Somewhat clear; reduce filler words and tighten sentences.")
+    else:
+        feedback_parts.append("Clarity issues detected; simplify statements and avoid fillers.")
+    return {
+        "overall": overall,
+        "relevance": round(float(sim), 2),
+        "content_quality": round(float(content_quality), 2),
+        "clarity": clarity,
+        "clarity_metrics": clarity_metrics,
+        "feedback": " ".join(feedback_parts)
+    }
 
 def assess_answer(candidate_answer, model_answer):
-    # (Code for assessment is unchanged)
-    vectorizer = TfidfVectorizer().fit_transform([candidate_answer, model_answer])
-    vectors = vectorizer.toarray()
-    similarity_score = cosine_similarity(vectors)[0, 1]
-    feedback = ""
-    if similarity_score > 0.6:
-        feedback = "Excellent! Your answer is comprehensive."
-    elif similarity_score > 0.3:
-        feedback = "Good answer, but could add more detail."
-    else:
-        feedback = "Your answer seems to be missing some key information."
-    return {"score": round(similarity_score, 2), "feedback": feedback}
+    qa = analyze_answer_quality(candidate_answer, model_answer)
+    return {"score": qa["overall"], "feedback": qa["feedback"], "subscores": {
+        "relevance": qa["relevance"],
+        "content_quality": qa["content_quality"],
+        "clarity": qa["clarity"]
+    }}

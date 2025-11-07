@@ -1,0 +1,35 @@
+{
+  "weights": {
+    "clarity": 0.30,
+    "relevance": 0.30,
+    "correctness": 0.25,
+    "tone": 0.10,
+    "stt_confidence": 0.05
+  },
+  "models": {
+    "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+    "clarity_model": "roberta-base",
+    "correctness_model": "roberta-base",
+    "relevance_model": "roberta-base",
+    "tone_model": "distilbert-base-uncased-finetuned-sst-2-english",
+    "use_cloud_api": false,
+    "model_version": "v1.0"
+  },
+  "thresholds": {
+    "async_processing_threshold_seconds": 120,
+    "target_latency_ms": 2000,
+    "max_audio_duration_seconds": 300
+  },
+  "rate_limits": {
+    "analyses_per_session_per_minute": 10,
+    "max_concurrent_analyses": 5
+  },
+  "retention": {
+    "analysis_retention_days": 30
+  },
+  "semantic_matching": {
+    "enable_ground_truth_matching": true,
+    "similarity_threshold": 0.7,
+    "correctness_weight_from_similarity": 0.5
+  }
+}

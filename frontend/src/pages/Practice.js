@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import DSACompiler from '../components/DSACompiler';
+import './Practice.css';
 
 const Practice = () => {
   const [activeTab, setActiveTab] = useState('behavioral');
@@ -112,17 +114,6 @@ const Practice = () => {
 
   const interviewTips = [
     {
-      title: "STAR Method",
-      description: "Structure your behavioral answers",
-      icon: "⭐",
-      details: [
-        "Situation: Set the context",
-        "Task: Describe your responsibility", 
-        "Action: Explain what you did",
-        "Result: Share the outcome"
-      ]
-    },
-    {
       title: "Research the Company",
       description: "Know your potential employer",
       icon: "🔍",
@@ -170,11 +161,12 @@ const Practice = () => {
           <p>Comprehensive resources and practice materials to help you succeed in any interview</p>
         </div>
         <div className="header-actions">
-          <Link to="/interview" className="cta-button primary">
-            <span>Start Practice Interview</span>
-            <span className="button-icon">🎯</span>
-          </Link>
         </div>
+      </div>
+
+      {/* DSA Compiler Section */}
+      <div className="compiler-section">
+        <DSACompiler />
       </div>
 
       {/* Quick Tips Section */}
@@ -229,11 +221,11 @@ const Practice = () => {
                   <h4 className="question-text">{item.question}</h4>
                 </div>
                 <div className="question-content">
-                  <div className="tips-section">
+                  <div className="question-tips">
                     <h5>💡 Tips:</h5>
                     <p>{item.tips}</p>
                   </div>
-                  <div className="sample-section">
+                  <div className="question-sample">
                     <h5>📝 Sample Start:</h5>
                     <p className="sample-text">{item.sample}</p>
                   </div>
@@ -248,11 +240,8 @@ const Practice = () => {
       <div className="practice-cta">
         <div className="cta-content">
           <h2>Ready to Practice?</h2>
-          <p>Put your preparation into action with our AI-powered interview simulator</p>
+          <p>Continue exploring interview questions and tips to improve your skills</p>
           <div className="cta-actions">
-            <Link to="/interview" className="cta-button primary large">
-              Start Mock Interview
-            </Link>
             <Link to="/" className="cta-button secondary large">
               Back to Home
             </Link>

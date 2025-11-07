@@ -16,24 +16,19 @@ const Home = ({ user }) => {
 
   const features = [
     {
+      icon: '🚀',
+      title: 'Cutting-edge Technology Meets Personalized Learning',
+      description: 'Our advanced AI adapts to your learning style, providing tailored interview experiences that evolve with your progress and help you master interview skills effectively.'
+    },
+    {
+      icon: '💡',
+      title: 'Real-time Feedback and Insights',
+      description: 'Receive instant, detailed feedback on your responses with actionable insights. Get comprehensive analysis of your communication style, strengths, and areas for improvement as you practice.'
+    },
+    {
       icon: '🎯',
-      title: 'Smart Analysis',
-      description: 'Our AI analyzes your verbal responses, body language, and communication patterns to provide comprehensive feedback.'
-    },
-    {
-      icon: '🔒',
-      title: 'Privacy First',
-      description: 'Your data is automatically anonymized and processed securely. We prioritize your privacy above all else.'
-    },
-    {
-      icon: '📈',
-      title: 'Real-time Feedback',
-      description: 'Get instant, actionable feedback on your performance with detailed scoring and improvement suggestions.'
-    },
-    {
-      icon: '🎪',
-      title: 'Realistic Simulation',
-      description: 'Experience authentic interview scenarios that prepare you for real-world situations.'
+      title: 'Adaptive Question Difficulty',
+      description: 'Questions automatically adjust to your skill level, ensuring you\'re always challenged appropriately. Start with easier questions and progress to more complex scenarios as you improve.'
     }
   ];
 

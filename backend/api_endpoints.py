@@ -22,6 +22,9 @@ from processors.audio_processor import get_audio_processor
 from processors.video_processor import get_video_processor
 from processors.text_processor import get_text_processor
 
+# Field-level encryption for secure storage
+from security.field_encryption import encrypt_document_fields
+
 router = APIRouter(prefix="/api", tags=["processing"])
 
 # ===== Session Management =====
@@ -128,34 +131,50 @@ async def upload_audio(
         
         # === Store transcript AND tokens if consent allows ===
         stored_data = False
+        redacted_text_for_response = result["original_text"]
         if session["allow_storage"]:
             try:
-                # Process text to get tokens
+                # Process text to redact PII and get tokens (uses advanced redactor if available)
                 text_processor = get_text_processor()
                 text_result = await text_processor.process_text(
                     result["original_text"],
                     compute_embedding=True,
                     lowercase_tokens=False
                 )
+                redacted_text_for_response = text_result["cleaned_text"]
                 
-                # Store complete document with transcribed text and tokens
+                # Store complete document with raw + redacted + tokens
                 answer_doc = {
                     "session_id": session_id,
                     "user_id": session["user_id"],
                     "consent_id": session["consent_id"],
-                    "transcribed_text": result["original_text"],   # ✅ Transcribed spoken text (from Whisper)
-                    "original_text": result["original_text"],      # ✅ Keep for backward compatibility
+                    # Raw STT
+                    "transcribed_text": result["original_text"],
+                    # Redacted/tokenized
                     "cleaned_text": text_result["cleaned_text"],
-                    "tokens": text_result["tokens"],                # ✅ Tokenized format
+                    "tokens": text_result["tokens"],
                     "token_count": text_result["token_count"],
+                    "pii_metadata": text_result.get("pii_metadata"),
+                    # Metrics
                     "stt_confidence": result["stt_confidence"],
                     "embedding": text_result.get("embedding"),
                     "embedding_present": text_result["embedding_present"],
                     "created_at": datetime.utcnow()
                 }
-                await database.answers.insert_one(answer_doc)
+                # Encrypt sensitive fields before storage
+                encrypted_doc = encrypt_document_fields(
+                    answer_doc,
+                    fields_to_encrypt=["transcribed_text", "cleaned_text"],
+                    associated_data={
+                        "collection": "answers",
+                        "session_id": session_id,
+                        "user_id": session["user_id"],
+                        "consent_id": session["consent_id"]
+                    }
+                )
+                await database.answers.insert_one(encrypted_doc)
                 stored_data = True
-                logger.info(f"✓ Transcript AND tokens stored for session {session_id}")
+                logger.info(f"✓ Transcript (encrypted) and tokens stored for session {session_id}")
             except Exception as e:
                 logger.error(f"✗ Failed to store answer: {e}")
                 # Continue even if storage fails - transcript still returned to user
@@ -180,7 +199,8 @@ async def upload_audio(
         
         return AudioProcessResult(
             session_id=session_id,
-            original_text=result["original_text"],
+            # Return redacted text to clients to avoid PII leakage
+            original_text=redacted_text_for_response,
             stt_confidence=result["stt_confidence"],
             stt_timestamp=result["stt_timestamp"],
             duration_seconds=result["duration_seconds"],
@@ -312,13 +332,25 @@ async def process_text(
                 "cleaned_text": result["cleaned_text"],
                 "tokens": result["tokens"],
                 "token_count": result["token_count"],
+                "pii_metadata": result.get("pii_metadata"),
                 "stt_confidence": None,  # Can be updated if from audio
                 "embedding": result.get("embedding"),
                 "embedding_present": result["embedding_present"],
                 "created_at": datetime.utcnow()
             }
-            await database.answers.insert_one(answer_doc)
-            logger.info(f"✓ Answer stored for session {request.session_id}")
+            # Encrypt sensitive text fields before storage
+            encrypted_doc = encrypt_document_fields(
+                answer_doc,
+                fields_to_encrypt=["original_text", "cleaned_text"],
+                associated_data={
+                    "collection": "answers",
+                    "session_id": request.session_id,
+                    "user_id": session["user_id"],
+                    "consent_id": session["consent_id"]
+                }
+            )
+            await database.answers.insert_one(encrypted_doc)
+            logger.info(f"✓ Text (encrypted) and tokens stored for session {request.session_id}")
             stored_data = True
         else:
             logger.info(f"✓ Answer processed but NOT stored (no consent) for session {request.session_id}")

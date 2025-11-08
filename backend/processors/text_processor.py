@@ -27,6 +27,14 @@ except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
     logger.warning("⚠️ sentence-transformers not available")
 
+# PII redaction module (names, emails, phones, addresses, orgs, etc.)
+try:
+    from privacy.pii_redactor import get_pii_redactor
+    PII_REDACTOR_AVAILABLE = True
+except Exception:
+    PII_REDACTOR_AVAILABLE = False
+    logger.warning("⚠️ Advanced PII redactor not available; falling back to basic regex redaction")
+
 class TextProcessor:
     def __init__(self, spacy_model: str = "en_core_web_sm", embedding_model: str = "all-MiniLM-L6-v2"):
         self.nlp = None
@@ -50,13 +58,14 @@ class TextProcessor:
     
     def clean_text(self, text: str) -> Tuple[str, List[str]]:
         """
-        Clean and normalize text, detect/redact PII
+        Clean and normalize text, detect/redact PII (basic fallback only).
+        Prefer using the advanced redactor in process_text.
         
         Returns:
             (cleaned_text, pii_flags)
         """
         pii_flags = []
-        cleaned = text
+        cleaned = text or ""
         
         # Normalize whitespace
         cleaned = ' '.join(cleaned.split())
@@ -65,29 +74,30 @@ class TextProcessor:
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         if re.search(email_pattern, cleaned):
             pii_flags.append('email')
-            cleaned = re.sub(email_pattern, '[EMAIL_REDACTED]', cleaned)
+            cleaned = re.sub(email_pattern, '[EMAIL]', cleaned)
         
         # Detect and redact phone numbers
         phone_patterns = [
             r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b',  # US format
-            r'\b\(\d{3}\)\s*\d{3}[-.\s]?\d{4}\b'    # (123) 456-7890
+            r'\b\(\d{3}\)\s*\d{3}[-.\s]?\d{4}\b',   # (123) 456-7890
+            r'\+\d{1,3}\s?\d{3}[-.]?\d{3}[-.]?\d{4}\b' # +1 123-456-7890
         ]
         for pattern in phone_patterns:
             if re.search(pattern, cleaned):
                 pii_flags.append('phone')
-                cleaned = re.sub(pattern, '[PHONE_REDACTED]', cleaned)
+                cleaned = re.sub(pattern, '[PHONE]', cleaned)
         
         # Detect SSN-like patterns
         ssn_pattern = r'\b\d{3}-\d{2}-\d{4}\b'
         if re.search(ssn_pattern, cleaned):
             pii_flags.append('ssn')
-            cleaned = re.sub(ssn_pattern, '[SSN_REDACTED]', cleaned)
+            cleaned = re.sub(ssn_pattern, '[SSN]', cleaned)
         
         # Detect credit cards
         cc_pattern = r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'
         if re.search(cc_pattern, cleaned):
             pii_flags.append('credit_card')
-            cleaned = re.sub(cc_pattern, '[CC_REDACTED]', cleaned)
+            cleaned = re.sub(cc_pattern, '[CC]', cleaned)
         
         return cleaned, pii_flags
     
@@ -148,22 +158,48 @@ class TextProcessor:
         lowercase_tokens: bool = False
     ) -> Dict:
         """
-        Full text processing pipeline
+        Full text processing pipeline: redact PII, tokenize, and optionally embed.
         
         Returns:
             Dict with processing results
         """
         try:
-            # 1. Clean text and detect PII
-            cleaned_text, pii_flags = self.clean_text(original_text)
+            text_input = original_text or ""
+            pii_metadata: Optional[Dict] = None
             
-            # 2. Tokenize
+            # 1) Advanced PII redaction if available; otherwise fallback to basic clean_text()
+            if PII_REDACTOR_AVAILABLE:
+                try:
+                    redactor = get_pii_redactor()
+                    cleaned_text, pii_metadata = redactor.redact_pii(text_input)
+                    # Optional validation; if it fails, proceed with cleaned_text but log
+                    if not redactor.validate_redaction(text_input, cleaned_text):
+                        logger.warning("PII redaction validation flagged potential remaining PII")
+                except Exception as e:
+                    logger.error(f"Advanced PII redaction failed, falling back to basic: {e}")
+                    cleaned_text, flags = self.clean_text(text_input)
+                    # derive minimal pii_metadata from flags
+                    pii_metadata = {"total_redactions": len(flags)}
+            else:
+                cleaned_text, flags = self.clean_text(text_input)
+                pii_metadata = {"total_redactions": len(flags)}
+            
+            # Derive pii_flags list from metadata (categories with count > 0)n            pii_flags: List[str] = []
+            if isinstance(pii_metadata, dict):
+                for k, v in pii_metadata.items():
+                    if k not in ("placeholders", "total_redactions") and isinstance(v, int) and v > 0:
+                        pii_flags.append(k)
+            
+            # Normalize whitespace post-redaction just in case
+            cleaned_text = ' '.join(cleaned_text.split())
+            
+            # 2) Tokenize redacted text
             tokens = self.tokenize(cleaned_text, lowercase=lowercase_tokens)
             
-            # 3. Segment sentences (for reference)
+            # 3) Segment sentences (for reference)
             sentences = self.segment_sentences(cleaned_text)
             
-            # 4. Compute embedding if requested
+            # 4) Compute embedding if requested
             embedding = None
             embedding_dimensions = None
             if compute_embedding and self.embedding_model is not None:
@@ -171,14 +207,15 @@ class TextProcessor:
                 if embedding is not None:
                     embedding_dimensions = len(embedding)
             
-            logger.info(f"✓ Text processed: {len(tokens)} tokens, {len(sentences)} sentences, PII: {pii_flags}")
+            logger.info(f"✓ Text processed: {len(tokens)} tokens, {len(sentences)} sentences, PII flags: {pii_flags}")
             
             return {
                 'cleaned_text': cleaned_text,
                 'tokens': tokens,
                 'token_count': len(tokens),
-                'pii_redacted': len(pii_flags) > 0,
+                'pii_redacted': bool(pii_flags) or (bool(pii_metadata) and pii_metadata.get('total_redactions', 0) > 0),
                 'pii_flags': pii_flags,
+                'pii_metadata': pii_metadata,
                 'embedding': embedding.tolist() if embedding is not None else None,
                 'embedding_present': embedding is not None,
                 'embedding_dimensions': embedding_dimensions,

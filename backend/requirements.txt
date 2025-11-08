@@ -9,3 +9,8 @@ ffmpeg-python
 spacy
 scikit-learn
 deepface
+cryptography
+fastapi
+uvicorn
+motor
+pydantic

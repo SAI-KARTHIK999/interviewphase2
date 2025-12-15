@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './DSACompiler.css';
+import { questions } from '../data/dsaQuestions';
 
-const DSACompiler = () => {
+const DSACompiler = ({ initialQuestion = null }) => {
   const [difficulty, setDifficulty] = useState('Easy');
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [code, setCode] = useState('');
@@ -9,194 +10,35 @@ const DSACompiler = () => {
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
   const [isRunning, setIsRunning] = useState(false);
+  const [testResults, setTestResults] = useState([]);
+  const [customOutput, setCustomOutput] = useState('');
 
-  // DSA Questions Database
-  const questions = {
-    Easy: [
-      {
-        id: 1,
-        title: 'Two Sum',
-        description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
-        example: 'Input: nums = [2,7,11,15], target = 9\nOutput: [0,1]\nExplanation: Because nums[0] + nums[1] == 9, we return [0, 1].',
-        template: 'function twoSum(nums, target) {\n    // Your code here\n    return [];\n}',
-        testCases: [
-          { input: '[2,7,11,15], 9', expected: '[0,1]' },
-          { input: '[3,2,4], 6', expected: '[1,2]' },
-          { input: '[3,3], 6', expected: '[0,1]' }
-        ]
-      },
-      {
-        id: 2,
-        title: 'Palindrome Number',
-        description: 'Given an integer x, return true if x is a palindrome, and false otherwise.',
-        example: 'Input: x = 121\nOutput: true\nExplanation: 121 reads as 121 from left to right and from right to left.',
-        template: 'function isPalindrome(x) {\n    // Your code here\n    return false;\n}',
-        testCases: [
-          { input: '121', expected: 'true' },
-          { input: '-121', expected: 'false' },
-          { input: '10', expected: 'false' }
-        ]
-      },
-      {
-        id: 3,
-        title: 'Reverse String',
-        description: 'Write a function that reverses a string. The input string is given as an array of characters s.',
-        example: 'Input: s = ["h","e","l","l","o"]\nOutput: ["o","l","l","e","h"]',
-        template: 'function reverseString(s) {\n    // Your code here\n    return s;\n}',
-        testCases: [
-          { input: '["h","e","l","l","o"]', expected: '["o","l","l","e","h"]' },
-          { input: '["H","a","n","n","a","h"]', expected: '["h","a","n","n","a","H"]' }
-        ]
-      },
-      {
-        id: 4,
-        title: 'Valid Parentheses',
-        description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid.',
-        example: 'Input: s = "()"\nOutput: true',
-        template: 'function isValid(s) {\n    // Your code here\n    return false;\n}',
-        testCases: [
-          { input: '"()"', expected: 'true' },
-          { input: '"()[]{}"', expected: 'true' },
-          { input: '"(]"', expected: 'false' }
-        ]
-      },
-      {
-        id: 5,
-        title: 'Maximum Subarray',
-        description: 'Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.',
-        example: 'Input: nums = [-2,1,-3,4,-1,2,1,-5,4]\nOutput: 6\nExplanation: [4,-1,2,1] has the largest sum = 6.',
-        template: 'function maxSubArray(nums) {\n    // Your code here\n    return 0;\n}',
-        testCases: [
-          { input: '[-2,1,-3,4,-1,2,1,-5,4]', expected: '6' },
-          { input: '[1]', expected: '1' },
-          { input: '[5,4,-1,7,8]', expected: '23' }
-        ]
-      }
-    ],
-    Medium: [
-      {
-        id: 6,
-        title: 'Longest Palindromic Substring',
-        description: 'Given a string s, return the longest palindromic substring in s.',
-        example: 'Input: s = "babad"\nOutput: "bab"\nExplanation: "aba" is also a valid answer.',
-        template: 'function longestPalindrome(s) {\n    // Your code here\n    return "";\n}',
-        testCases: [
-          { input: '"babad"', expected: '"bab" or "aba"' },
-          { input: '"cbbd"', expected: '"bb"' },
-          { input: '"a"', expected: '"a"' }
-        ]
-      },
-      {
-        id: 7,
-        title: 'Container With Most Water',
-        description: 'You are given an integer array height of length n. Find two lines that together with the x-axis form a container, such that the container contains the most water.',
-        example: 'Input: height = [1,8,6,2,5,4,8,3,7]\nOutput: 49',
-        template: 'function maxArea(height) {\n    // Your code here\n    return 0;\n}',
-        testCases: [
-          { input: '[1,8,6,2,5,4,8,3,7]', expected: '49' },
-          { input: '[1,1]', expected: '1' }
-        ]
-      },
-      {
-        id: 8,
-        title: '3Sum',
-        description: 'Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.',
-        example: 'Input: nums = [-1,0,1,2,-1,-4]\nOutput: [[-1,-1,2],[-1,0,1]]',
-        template: 'function threeSum(nums) {\n    // Your code here\n    return [];\n}',
-        testCases: [
-          { input: '[-1,0,1,2,-1,-4]', expected: '[[-1,-1,2],[-1,0,1]]' },
-          { input: '[0,1,1]', expected: '[]' },
-          { input: '[0,0,0]', expected: '[[0,0,0]]' }
-        ]
-      },
-      {
-        id: 9,
-        title: 'Longest Substring Without Repeating Characters',
-        description: 'Given a string s, find the length of the longest substring without repeating characters.',
-        example: 'Input: s = "abcabcbb"\nOutput: 3\nExplanation: The answer is "abc", with the length of 3.',
-        template: 'function lengthOfLongestSubstring(s) {\n    // Your code here\n    return 0;\n}',
-        testCases: [
-          { input: '"abcabcbb"', expected: '3' },
-          { input: '"bbbbb"', expected: '1' },
-          { input: '"pwwkew"', expected: '3' }
-        ]
-      },
-      {
-        id: 10,
-        title: 'Add Two Numbers',
-        description: 'You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order. Add the two numbers and return the sum as a linked list.',
-        example: 'Input: l1 = [2,4,3], l2 = [5,6,4]\nOutput: [7,0,8]\nExplanation: 342 + 465 = 807.',
-        template: 'function addTwoNumbers(l1, l2) {\n    // Your code here\n    return null;\n}',
-        testCases: [
-          { input: '[2,4,3], [5,6,4]', expected: '[7,0,8]' },
-          { input: '[0], [0]', expected: '[0]' },
-          { input: '[9,9,9,9,9,9,9], [9,9,9,9]', expected: '[8,9,9,9,0,0,0,1]' }
-        ]
-      }
-    ],
-    Hard: [
-      {
-        id: 11,
-        title: 'Median of Two Sorted Arrays',
-        description: 'Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.',
-        example: 'Input: nums1 = [1,3], nums2 = [2]\nOutput: 2.00000\nExplanation: merged array = [1,2,3] and median is 2.',
-        template: 'function findMedianSortedArrays(nums1, nums2) {\n    // Your code here\n    return 0;\n}',
-        testCases: [
-          { input: '[1,3], [2]', expected: '2.0' },
-          { input: '[1,2], [3,4]', expected: '2.5' }
-        ]
-      },
-      {
-        id: 12,
-        title: 'Merge k Sorted Lists',
-        description: 'You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.',
-        example: 'Input: lists = [[1,4,5],[1,3,4],[2,6]]\nOutput: [1,1,2,3,4,4,5,6]',
-        template: 'function mergeKLists(lists) {\n    // Your code here\n    return null;\n}',
-        testCases: [
-          { input: '[[1,4,5],[1,3,4],[2,6]]', expected: '[1,1,2,3,4,4,5,6]' },
-          { input: '[]', expected: '[]' },
-          { input: '[[]]', expected: '[]' }
-        ]
-      },
-      {
-        id: 13,
-        title: 'Trapping Rain Water',
-        description: 'Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.',
-        example: 'Input: height = [0,1,0,2,1,0,1,3,2,1,2,1]\nOutput: 6',
-        template: 'function trap(height) {\n    // Your code here\n    return 0;\n}',
-        testCases: [
-          { input: '[0,1,0,2,1,0,1,3,2,1,2,1]', expected: '6' },
-          { input: '[4,2,0,3,2,5]', expected: '9' }
-        ]
-      },
-      {
-        id: 14,
-        title: 'N-Queens',
-        description: 'The n-queens puzzle is the problem of placing n queens on an n x n chessboard such that no two queens attack each other. Given an integer n, return all distinct solutions to the n-queens puzzle.',
-        example: 'Input: n = 4\nOutput: [[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]',
-        template: 'function solveNQueens(n) {\n    // Your code here\n    return [];\n}',
-        testCases: [
-          { input: '4', expected: '2 solutions' },
-          { input: '1', expected: '1 solution' }
-        ]
-      },
-      {
-        id: 15,
-        title: 'Edit Distance',
-        description: 'Given two strings word1 and word2, return the minimum number of operations required to convert word1 to word2. You have three operations: insert, delete, or replace a character.',
-        example: 'Input: word1 = "horse", word2 = "ros"\nOutput: 3\nExplanation: horse -> rorse -> rose -> ros',
-        template: 'function minDistance(word1, word2) {\n    // Your code here\n    return 0;\n}',
-        testCases: [
-          { input: '"horse", "ros"', expected: '3' },
-          { input: '"intention", "execution"', expected: '5' }
-        ]
-      }
-    ]
-  };
-
-  // Generate random question when difficulty changes
+  // Set initial question if provided
   useEffect(() => {
-    generateQuestion();
+    if (initialQuestion) {
+      setCurrentQuestion(initialQuestion);
+      setCode(initialQuestion.template);
+      // Determine difficulty based on which array contains the question
+      if (questions.Easy.some(q => q.id === initialQuestion.id)) {
+        setDifficulty('Easy');
+      } else if (questions.Medium.some(q => q.id === initialQuestion.id)) {
+        setDifficulty('Medium');
+      } else {
+        setDifficulty('Hard');
+      }
+      setInput('');
+      setOutput('');
+      setCustomOutput('');
+      setError('');
+      setTestResults([]);
+    }
+  }, [initialQuestion]);
+
+  // Generate random question when difficulty changes (only if no initial question)
+  useEffect(() => {
+    if (!initialQuestion) {
+      generateQuestion();
+    }
   }, [difficulty]);
 
   const generateQuestion = () => {
@@ -207,96 +49,9 @@ const DSACompiler = () => {
     setCode(question.template);
     setInput('');
     setOutput('');
+    setCustomOutput('');
     setError('');
-  };
-
-  const executeCode = () => {
-    setIsRunning(true);
-    setError('');
-    setOutput('');
-
-    try {
-      // Create a safe execution context
-      const userCode = code;
-      const userInput = input.trim();
-
-      // Wrap the code in a try-catch for error handling
-      const wrappedCode = `
-        try {
-          ${userCode}
-          
-          // Parse input if provided
-          let parsedInput = null;
-          if (userInput) {
-            try {
-              parsedInput = JSON.parse(userInput);
-            } catch (e) {
-              parsedInput = userInput;
-            }
-          }
-          
-          // Execute the function based on question type
-          let result;
-          if (typeof twoSum === 'function') {
-            const [nums, target] = parsedInput || [[2,7,11,15], 9];
-            result = twoSum(nums, target);
-          } else if (typeof isPalindrome === 'function') {
-            result = isPalindrome(parsedInput !== null ? parsedInput : 121);
-          } else if (typeof reverseString === 'function') {
-            const arr = parsedInput || ["h","e","l","l","o"];
-            reverseString(arr);
-            result = arr;
-          } else if (typeof isValid === 'function') {
-            result = isValid(parsedInput !== null ? parsedInput : "()");
-          } else if (typeof maxSubArray === 'function') {
-            const nums = parsedInput || [-2,1,-3,4,-1,2,1,-5,4];
-            result = maxSubArray(nums);
-          } else if (typeof longestPalindrome === 'function') {
-            result = longestPalindrome(parsedInput !== null ? parsedInput : "babad");
-          } else if (typeof maxArea === 'function') {
-            const height = parsedInput || [1,8,6,2,5,4,8,3,7];
-            result = maxArea(height);
-          } else if (typeof threeSum === 'function') {
-            const nums = parsedInput || [-1,0,1,2,-1,-4];
-            result = threeSum(nums);
-          } else if (typeof lengthOfLongestSubstring === 'function') {
-            result = lengthOfLongestSubstring(parsedInput !== null ? parsedInput : "abcabcbb");
-          } else if (typeof addTwoNumbers === 'function') {
-            result = "Linked list solution - check manually";
-          } else if (typeof findMedianSortedArrays === 'function') {
-            const [nums1, nums2] = parsedInput || [[1,3], [2]];
-            result = findMedianSortedArrays(nums1, nums2);
-          } else if (typeof mergeKLists === 'function') {
-            result = "Linked list solution - check manually";
-          } else if (typeof trap === 'function') {
-            const height = parsedInput || [0,1,0,2,1,0,1,3,2,1,2,1];
-            result = trap(height);
-          } else if (typeof solveNQueens === 'function') {
-            const n = parsedInput !== null ? parsedInput : 4;
-            result = solveNQueens(n);
-          } else if (typeof minDistance === 'function') {
-            const [word1, word2] = parsedInput || ["horse", "ros"];
-            result = minDistance(word1, word2);
-          } else {
-            result = "Function not recognized. Please use the provided template.";
-          }
-          
-          return JSON.stringify(result, null, 2);
-        } catch (err) {
-          throw err;
-        }
-      `;
-
-      // Execute in a controlled environment
-      const func = new Function('userInput', wrappedCode);
-      const result = func(userInput);
-      setOutput(result);
-    } catch (err) {
-      setError(err.message || 'An error occurred while executing the code.');
-      setOutput('');
-    } finally {
-      setIsRunning(false);
-    }
+    setTestResults([]);
   };
 
   const handleReset = () => {
@@ -304,7 +59,370 @@ const DSACompiler = () => {
       setCode(currentQuestion.template);
       setInput('');
       setOutput('');
+      setCustomOutput('');
       setError('');
+      setTestResults([]);
+    }
+  };
+
+  // Helper function to parse test case input
+  const parseTestCaseInput = (inputStr, functionName) => {
+    try {
+      // Try to parse as JSON first
+      try {
+        return JSON.parse(inputStr);
+      } catch (e) {
+        // If not JSON, try to parse based on function type
+        if (functionName === 'twoSum' || functionName === 'threeSum' || functionName === 'maxSubArray' || functionName === 'containsDuplicate') {
+          // Array inputs
+          const match = inputStr.match(/\[.*?\]/);
+          if (match) {
+            const arr = JSON.parse(match[0]);
+            if (inputStr.includes(',')) {
+              const parts = inputStr.split(',').map(s => s.trim());
+              if (parts.length === 2 && parts[1].match(/^\d+$/)) {
+                return [arr, parseInt(parts[1])];
+              }
+            }
+            return arr;
+          }
+        } else if (functionName === 'isPalindrome' || functionName === 'lengthOfLongestSubstring' || functionName === 'longestPalindrome' || functionName === 'isValid') {
+          // String or number inputs
+          if (inputStr.startsWith('"') && inputStr.endsWith('"')) {
+            return inputStr.slice(1, -1);
+          } else if (!isNaN(inputStr)) {
+            return parseInt(inputStr);
+          }
+          return inputStr;
+        } else if (functionName === 'reverseString') {
+          // Array of characters
+          try {
+            return JSON.parse(inputStr);
+          } catch (e) {
+            return inputStr.split('').filter(c => c !== '[' && c !== ']' && c !== '"' && c !== ',');
+          }
+        } else if (functionName === 'maxArea' || functionName === 'trap') {
+          // Array input
+          try {
+            return JSON.parse(inputStr);
+          } catch (e) {
+            return [];
+          }
+        } else if (functionName === 'findMedianSortedArrays') {
+          // Two arrays
+          const arrays = inputStr.match(/\[.*?\]/g);
+          if (arrays && arrays.length === 2) {
+            return [JSON.parse(arrays[0]), JSON.parse(arrays[1])];
+          }
+        } else if (functionName === 'minDistance' || functionName === 'solveNQueens') {
+          // Two strings or number
+          if (inputStr.includes(',')) {
+            const parts = inputStr.split(',').map(s => s.trim());
+            if (parts.length === 2) {
+              return [parts[0].replace(/"/g, ''), parts[1].replace(/"/g, '')];
+            }
+          } else if (!isNaN(inputStr)) {
+            return parseInt(inputStr);
+          }
+        }
+        return inputStr;
+      }
+    } catch (e) {
+      return inputStr;
+    }
+  };
+
+  // Helper function to compare results
+  const compareResults = (actual, expected) => {
+    try {
+      // Parse expected value
+      let expectedParsed;
+      try {
+        expectedParsed = JSON.parse(expected);
+      } catch (e) {
+        expectedParsed = expected;
+      }
+
+      // Deep comparison for arrays and objects
+      if (Array.isArray(actual) && Array.isArray(expectedParsed)) {
+        if (actual.length !== expectedParsed.length) return false;
+        return actual.every((val, idx) => {
+          if (Array.isArray(val) && Array.isArray(expectedParsed[idx])) {
+            return JSON.stringify(val.sort()) === JSON.stringify(expectedParsed[idx].sort());
+          }
+          return JSON.stringify(val) === JSON.stringify(expectedParsed[idx]);
+        });
+      }
+
+      // For arrays with "or" in expected (like "bab" or "aba")
+      if (typeof expectedParsed === 'string' && expectedParsed.includes(' or ')) {
+        const options = expectedParsed.split(' or ').map(s => s.trim().replace(/"/g, ''));
+        return options.some(opt => {
+          try {
+            const optParsed = JSON.parse(opt);
+            return JSON.stringify(actual) === JSON.stringify(optParsed);
+          } catch (e) {
+            return String(actual) === opt;
+          }
+        });
+      }
+
+      // String comparison
+      if (typeof actual === 'string' && typeof expectedParsed === 'string') {
+        return actual === expectedParsed;
+      }
+
+      // Number comparison
+      if (typeof actual === 'number' && typeof expectedParsed === 'number') {
+        return Math.abs(actual - expectedParsed) < 0.0001;
+      }
+
+      // JSON comparison
+      return JSON.stringify(actual) === JSON.stringify(expectedParsed);
+    } catch (e) {
+      return String(actual) === String(expected);
+    }
+  };
+
+  // Function to execute code with a specific input
+  const executeWithInput = (userCode, testInput, functionName) => {
+    try {
+      const wrappedCode = `
+        try {
+          ${userCode}
+          
+          // Parse input
+          let parsedInput = ${JSON.stringify(testInput)};
+          
+          // Execute the function based on detected name when possible
+          let result;
+          const fnName = "${functionName || ''}";
+
+          if (fnName && typeof eval(fnName) === 'function') {
+            const fn = eval(fnName);
+            // If the parsedInput is an array, spread it as arguments; otherwise pass as single arg
+            result = Array.isArray(parsedInput) ? fn(...parsedInput) : fn(parsedInput);
+          } else if (typeof twoSum === 'function') {
+            const [nums, target] = Array.isArray(parsedInput) && parsedInput.length === 2 ? parsedInput : [parsedInput[0], parsedInput[1]];
+            result = twoSum(nums, target);
+          } else if (typeof isPalindrome === 'function') {
+            result = isPalindrome(parsedInput);
+          } else if (typeof reverseString === 'function') {
+            const arr = Array.isArray(parsedInput) ? [...parsedInput] : parsedInput;
+            reverseString(arr);
+            result = arr;
+          } else if (typeof isValid === 'function') {
+            result = isValid(parsedInput);
+          } else if (typeof maxSubArray === 'function') {
+            result = maxSubArray(parsedInput);
+          } else if (typeof longestPalindrome === 'function') {
+            result = longestPalindrome(parsedInput);
+          } else if (typeof maxArea === 'function') {
+            result = maxArea(parsedInput);
+          } else if (typeof threeSum === 'function') {
+            result = threeSum(parsedInput);
+          } else if (typeof lengthOfLongestSubstring === 'function') {
+            result = lengthOfLongestSubstring(parsedInput);
+          } else if (typeof addTwoNumbers === 'function') {
+            result = "Linked list solution - check manually";
+          } else if (typeof findMedianSortedArrays === 'function') {
+            const [nums1, nums2] = Array.isArray(parsedInput) && parsedInput.length === 2 ? parsedInput : [parsedInput[0], parsedInput[1]];
+            result = findMedianSortedArrays(nums1, nums2);
+          } else if (typeof mergeKLists === 'function') {
+            result = "Linked list solution - check manually";
+          } else if (typeof trap === 'function') {
+            result = trap(parsedInput);
+          } else if (typeof solveNQueens === 'function') {
+            result = solveNQueens(parsedInput);
+          } else if (typeof minDistance === 'function') {
+            const [word1, word2] = Array.isArray(parsedInput) && parsedInput.length === 2 ? parsedInput : [parsedInput[0], parsedInput[1]];
+            result = minDistance(word1, word2);
+          } else {
+            result = "Function not recognized. Please use the provided template.";
+          }
+          
+          return result;
+        } catch (err) {
+          throw err;
+        }
+      `;
+
+      const func = new Function('', wrappedCode);
+      return func();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // Function to detect function name from code
+  const detectFunctionName = (code) => {
+    const functionNames = [
+      'twoSum', 'isPalindrome', 'reverseString', 'isValid', 'maxSubArray',
+      'longestPalindrome', 'maxArea', 'threeSum', 'lengthOfLongestSubstring',
+      'addTwoNumbers', 'findMedianSortedArrays', 'mergeKLists', 'trap',
+      'solveNQueens', 'minDistance', 'containsDuplicate'
+    ];
+
+    // First, try to match known function names
+    for (const name of functionNames) {
+      if (code.includes(`function ${name}`) || code.includes(`${name} =`) || code.includes(`const ${name}`)) {
+        return name;
+      }
+    }
+
+    // If no known name is found, try to detect any function declaration as a fallback
+    const fnDeclMatch = code.match(/function\s+([a-zA-Z0-9_]+)/);
+    if (fnDeclMatch && fnDeclMatch[1]) {
+      return fnDeclMatch[1];
+    }
+
+    // Arrow function or const assignment like: const solution = (...) => { }
+    const constFnMatch = code.match(/const\s+([a-zA-Z0-9_]+)\s*=\s*\(/);
+    if (constFnMatch && constFnMatch[1]) {
+      return constFnMatch[1];
+    }
+
+    return null;
+  };
+
+  // Updated executeCode to run test cases
+  const executeCode = () => {
+    setIsRunning(true);
+    setError('');
+    setOutput('');
+    setCustomOutput('');
+    setTestResults([]);
+
+    try {
+      const userCode = code;
+      const userInput = input.trim();
+      const functionName = detectFunctionName(userCode);
+
+      // If user provided custom input, run with that
+      if (userInput) {
+        try {
+          let parsedInput = null;
+          try {
+            parsedInput = JSON.parse(userInput);
+          } catch (e) {
+            parsedInput = userInput;
+          }
+
+          const wrappedCode = `
+            try {
+              ${userCode}
+              
+              let parsedInput = ${JSON.stringify(parsedInput)};
+              let result;
+              const fnName = "${functionName || ''}";
+
+              if (fnName && typeof eval(fnName) === 'function') {
+                const fn = eval(fnName);
+                result = Array.isArray(parsedInput) ? fn(...parsedInput) : fn(parsedInput);
+              } else if (typeof twoSum === 'function') {
+                const [nums, target] = Array.isArray(parsedInput) && parsedInput.length === 2 ? parsedInput : [parsedInput[0], parsedInput[1]];
+                result = twoSum(nums, target);
+              } else if (typeof isPalindrome === 'function') {
+                result = isPalindrome(parsedInput);
+              } else if (typeof reverseString === 'function') {
+                const arr = Array.isArray(parsedInput) ? [...parsedInput] : parsedInput;
+                reverseString(arr);
+                result = arr;
+              } else if (typeof isValid === 'function') {
+                result = isValid(parsedInput);
+              } else if (typeof maxSubArray === 'function') {
+                result = maxSubArray(parsedInput);
+              } else if (typeof longestPalindrome === 'function') {
+                result = longestPalindrome(parsedInput);
+              } else if (typeof maxArea === 'function') {
+                result = maxArea(parsedInput);
+              } else if (typeof threeSum === 'function') {
+                result = threeSum(parsedInput);
+              } else if (typeof lengthOfLongestSubstring === 'function') {
+                result = lengthOfLongestSubstring(parsedInput);
+              } else if (typeof findMedianSortedArrays === 'function') {
+                const [nums1, nums2] = Array.isArray(parsedInput) && parsedInput.length === 2 ? parsedInput : [parsedInput[0], parsedInput[1]];
+                result = findMedianSortedArrays(nums1, nums2);
+              } else if (typeof trap === 'function') {
+                result = trap(parsedInput);
+              } else if (typeof solveNQueens === 'function') {
+                result = solveNQueens(parsedInput);
+              } else if (typeof minDistance === 'function') {
+                const [word1, word2] = Array.isArray(parsedInput) && parsedInput.length === 2 ? parsedInput : [parsedInput[0], parsedInput[1]];
+                result = minDistance(word1, word2);
+              } else {
+                result = "Function not recognized. Please use the provided template.";
+              }
+              
+              return JSON.stringify(result, null, 2);
+            } catch (err) {
+              throw err;
+            }
+          `;
+
+          const func = new Function('', wrappedCode);
+          const result = func();
+          setCustomOutput(result);
+        } catch (err) {
+          setError(`${err.name}: ${err.message}\n${err.stack || ''}`);
+          setIsRunning(false);
+          return;
+        }
+      }
+
+      // Run all test cases
+      if (currentQuestion && currentQuestion.testCases && currentQuestion.testCases.length > 0) {
+        const results = [];
+        
+        for (let i = 0; i < currentQuestion.testCases.length; i++) {
+          const testCase = currentQuestion.testCases[i];
+          
+          try {
+            const parsedInput = parseTestCaseInput(testCase.input, functionName);
+            const actualResult = executeWithInput(userCode, parsedInput, functionName);
+            const passed = compareResults(actualResult, testCase.expected);
+            
+            results.push({
+              testCase: i + 1,
+              input: testCase.input,
+              expected: testCase.expected,
+              actual: JSON.stringify(actualResult),
+              passed: passed,
+              error: null
+            });
+          } catch (err) {
+            results.push({
+              testCase: i + 1,
+              input: testCase.input,
+              expected: testCase.expected,
+              actual: null,
+              passed: false,
+              error: `${err.name}: ${err.message}${err.stack ? '\n' + err.stack.split('\n').slice(0, 3).join('\n') : ''}`
+            });
+          }
+        }
+        
+        setTestResults(results);
+        
+        // Set summary output
+        const passedCount = results.filter(r => r.passed).length;
+        const totalCount = results.length;
+        const summary = `Test Results: ${passedCount}/${totalCount} passed\n\n`;
+        setOutput(summary + results.map(r => 
+          `Test Case ${r.testCase}: ${r.passed ? '✅ PASSED' : '❌ FAILED'}\n` +
+          `  Input: ${r.input}\n` +
+          `  Expected: ${r.expected}\n` +
+          (r.actual ? `  Got: ${r.actual}\n` : '') +
+          (r.error ? `  Error: ${r.error}\n` : '')
+        ).join('\n'));
+      } else {
+        setOutput('No test cases available for this problem.');
+      }
+    } catch (err) {
+      setError(`${err.name}: ${err.message}\n\nStack Trace:\n${err.stack || 'No stack trace available'}`);
+      setOutput('');
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -405,21 +523,87 @@ const DSACompiler = () => {
 
           <div className="output-section">
             <div className="section-header">
-              <span>📤 Output</span>
+              <span>📤 Results</span>
+              {testResults.length > 0 && (
+                <span className="test-summary">
+                  {testResults.filter(r => r.passed).length}/{testResults.length} Passed
+                </span>
+              )}
             </div>
             {error ? (
               <div className="output-error">
-                <strong>Error:</strong>
-                <pre>{error}</pre>
+                <div className="error-header">
+                  <strong>❌ Execution Error</strong>
+                </div>
+                <div className="error-content">
+                  <pre>{error}</pre>
+                </div>
+              </div>
+            ) : testResults.length > 0 ? (
+              <div className="test-results-container">
+                <div className="test-results-summary">
+                  <div className={`summary-card ${testResults.every(r => r.passed) ? 'all-passed' : 'some-failed'}`}>
+                    <div className="summary-stats">
+                      <span className="summary-label">Test Results:</span>
+                      <span className="summary-value">
+                        {testResults.filter(r => r.passed).length} / {testResults.length} Passed
+                      </span>
+                    </div>
+                    {testResults.every(r => r.passed) ? (
+                      <div className="summary-message success">🎉 All test cases passed!</div>
+                    ) : (
+                      <div className="summary-message failure">⚠️ Some test cases failed</div>
+                    )}
+                  </div>
+                </div>
+                <div className="test-cases-results">
+                  {testResults.map((result, idx) => (
+                    <div key={idx} className={`test-case-result ${result.passed ? 'passed' : 'failed'}`}>
+                      <div className="test-case-header">
+                        <span className="test-case-number">Test Case {result.testCase}</span>
+                        <span className={`test-case-status ${result.passed ? 'passed' : 'failed'}`}>
+                          {result.passed ? '✅ PASSED' : '❌ FAILED'}
+                        </span>
+                      </div>
+                      <div className="test-case-details">
+                        <div className="test-case-row">
+                          <span className="test-label">Input:</span>
+                          <span className="test-value">{result.input}</span>
+                        </div>
+                        <div className="test-case-row">
+                          <span className="test-label">Expected:</span>
+                          <span className="test-value expected">{result.expected}</span>
+                        </div>
+                        {result.actual && (
+                          <div className="test-case-row">
+                            <span className="test-label">Got:</span>
+                            <span className={`test-value ${result.passed ? 'actual-passed' : 'actual-failed'}`}>
+                              {result.actual}
+                            </span>
+                          </div>
+                        )}
+                        {result.error && (
+                          <div className="test-case-error">
+                            <span className="error-label">Error:</span>
+                            <pre className="error-message">{result.error}</pre>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : customOutput ? (
+              <div className="output-content">
+                <div className="custom-output-header">Custom Input Output:</div>
+                <pre>{customOutput}</pre>
+              </div>
+            ) : output ? (
+              <div className="output-content">
+                <pre>{output}</pre>
               </div>
             ) : (
-              <div className="output-content">
-                {output ? (
-                  <pre>{output}</pre>
-                ) : (
-                  <p className="output-placeholder">Output will appear here...</p>
-                )}
-              </div>
+              <p className="output-placeholder">Click "Run Code" to test your solution against all test cases...</p>
             )}
           </div>
         </div>

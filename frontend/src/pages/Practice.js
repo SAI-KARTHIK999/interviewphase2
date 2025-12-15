@@ -1,255 +1,217 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import DSACompiler from '../components/DSACompiler';
+import { questions } from '../data/dsaQuestions';
 import './Practice.css';
 
 const Practice = () => {
-  const [activeTab, setActiveTab] = useState('behavioral');
+  const [view, setView] = useState('categories'); // 'categories', 'problems', 'question', 'compiler'
+  const [selectedDifficulty, setSelectedDifficulty] = useState(null);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [randomQuestion, setRandomQuestion] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  const interviewCategories = {
-    behavioral: {
-      title: 'Behavioral Questions',
-      icon: '🧠',
-      description: 'Questions about past experiences and how you handled situations',
-      questions: [
-        {
-          question: "Tell me about a time when you had to work with a difficult team member.",
-          tips: "Focus on your communication skills, problem-solving approach, and positive outcome. Use the STAR method.",
-          sample: "In my previous role, I worked with a colleague who consistently missed deadlines, affecting our team's performance..."
-        },
-        {
-          question: "Describe a situation where you had to learn something new quickly.",
-          tips: "Highlight your adaptability, learning methods, and how you applied the new knowledge successfully.",
-          sample: "When our company adopted a new CRM system, I had only two weeks to become proficient..."
-        },
-        {
-          question: "Tell me about a time you failed and how you handled it.",
-          tips: "Show self-awareness, what you learned, and how you improved. End on a positive note.",
-          sample: "Early in my career, I underestimated the time needed for a project and missed a critical deadline..."
-        },
-        {
-          question: "Describe a time when you had to persuade someone to see things your way.",
-          tips: "Demonstrate your communication skills, empathy, and ability to find common ground.",
-          sample: "I needed to convince my manager to invest in new software that would improve our team's efficiency..."
-        }
-      ]
-    },
-    technical: {
-      title: 'Technical Questions',
-      icon: '💻',
-      description: 'Role-specific technical knowledge and problem-solving skills',
-      questions: [
-        {
-          question: "Walk me through how you would approach debugging a complex issue.",
-          tips: "Show systematic thinking, use of tools, and collaboration with team members.",
-          sample: "I start by reproducing the issue, then use logging and debugging tools to isolate the problem..."
-        },
-        {
-          question: "How do you stay updated with the latest technologies in your field?",
-          tips: "Mention specific resources, communities, and how you apply new learning.",
-          sample: "I regularly follow industry blogs, attend webinars, and participate in online communities..."
-        },
-        {
-          question: "Describe your experience with [specific technology/tool].",
-          tips: "Be specific about projects, challenges overcome, and results achieved.",
-          sample: "I've worked with React for 3 years, building several large-scale applications..."
-        }
-      ]
-    },
-    situational: {
-      title: 'Situational Questions',
-      icon: '🎯',
-      description: 'Hypothetical scenarios to assess your judgment and decision-making',
-      questions: [
-        {
-          question: "What would you do if you disagreed with your manager's decision?",
-          tips: "Show respect for hierarchy while demonstrating critical thinking and communication skills.",
-          sample: "I would first seek to understand their reasoning, then respectfully present my perspective with supporting data..."
-        },
-        {
-          question: "How would you handle a situation where you have multiple urgent deadlines?",
-          tips: "Demonstrate prioritization skills, time management, and communication with stakeholders.",
-          sample: "I would assess the impact and urgency of each task, communicate with stakeholders about realistic timelines..."
-        },
-        {
-          question: "What would you do if you realized you made a mistake that could affect the project?",
-          tips: "Show accountability, problem-solving, and proactive communication.",
-          sample: "I would immediately assess the impact, develop a solution plan, and communicate transparently with my team..."
-        }
-      ]
-    },
-    general: {
-      title: 'General Questions',
-      icon: '❓',
-      description: 'Common questions about yourself, motivations, and career goals',
-      questions: [
-        {
-          question: "Tell me about yourself.",
-          tips: "Create a compelling 2-minute story connecting your background to the role. Focus on relevant experiences.",
-          sample: "I'm a software developer with 5 years of experience building scalable web applications..."
-        },
-        {
-          question: "Why do you want to work here?",
-          tips: "Research the company thoroughly. Connect your values and goals with the company's mission.",
-          sample: "I'm excited about your company's commitment to innovation and how you're transforming the industry..."
-        },
-        {
-          question: "What is your greatest weakness?",
-          tips: "Choose a real weakness that won't disqualify you, and explain how you're actively working to improve it.",
-          sample: "I sometimes focus too much on perfecting details, which can slow down my initial progress..."
-        },
-        {
-          question: "Where do you see yourself in 5 years?",
-          tips: "Show ambition while aligning with potential career paths at the company.",
-          sample: "I see myself having grown both technically and as a leader, potentially mentoring junior developers..."
-        }
-      ]
+  const handleCategorySelect = (difficulty) => {
+    setSelectedDifficulty(difficulty);
+    setView('problems');
+  };
+
+  const handleProblemSelect = (question) => {
+    setSelectedQuestion(question);
+    setView('compiler');
+  };
+
+  const handleRandomQuestion = () => {
+    const allQuestions = [...questions.Easy, ...questions.Medium, ...questions.Hard];
+    const random = allQuestions[Math.floor(Math.random() * allQuestions.length)];
+    setRandomQuestion(random);
+    setView('question');
+  };
+
+  const handleCodeItFromQuestion = () => {
+    setSelectedQuestion(randomQuestion);
+    setView('compiler');
+  };
+
+  const handleBack = () => {
+    if (view === 'compiler') {
+      setView('problems');
+      setSelectedQuestion(null);
+    } else if (view === 'problems') {
+      setView('categories');
+      setSelectedDifficulty(null);
+    } else if (view === 'question') {
+      setView('categories');
+      setRandomQuestion(null);
     }
   };
 
-  const interviewTips = [
-    {
-      title: "Research the Company",
-      description: "Know your potential employer",
-      icon: "🔍",
-      details: [
-        "Company mission and values",
-        "Recent news and achievements",
-        "Team structure and culture",
-        "Products and services"
-      ]
-    },
-    {
-      title: "Prepare Questions",
-      description: "Show your genuine interest",
-      icon: "❓",
-      details: [
-        "About the role and expectations",
-        "Team dynamics and collaboration",
-        "Company culture and growth",
-        "Challenges and opportunities"
-      ]
-    },
-    {
-      title: "Body Language",
-      description: "Non-verbal communication matters",
-      icon: "👤",
-      details: [
-        "Maintain eye contact",
-        "Sit up straight and lean forward",
-        "Use gestures naturally",
-        "Smile and show enthusiasm"
-      ]
-    }
-  ];
-
-  return (
-    <div className={`practice-container ${isVisible ? 'fade-in' : ''}`}>
-      {/* Header Section */}
-      <div className="practice-header">
-        <div className="header-content">
-          <div className="header-badge">
-            <span className="badge-icon">📚</span>
-            <span>Interview Preparation</span>
+  // Category Selection View
+  if (view === 'categories') {
+    return (
+      <div className={`practice-container ${isVisible ? 'fade-in' : ''}`}>
+        <div className="practice-header">
+          <div className="header-content">
+            <h1>Practice Coding Problems</h1>
+            <p>Choose a difficulty level to start practicing</p>
           </div>
-          <h1>Master Your Interview Skills</h1>
-          <p>Comprehensive resources and practice materials to help you succeed in any interview</p>
         </div>
-        <div className="header-actions">
+
+        <div className="categories-grid">
+          <div 
+            className="category-card easy"
+            onClick={() => handleCategorySelect('Easy')}
+          >
+            <div className="category-icon">🟢</div>
+            <h2>Easy</h2>
+            <p>{questions.Easy.length} problems available</p>
+            <div className="category-arrow">→</div>
+          </div>
+
+          <div 
+            className="category-card medium"
+            onClick={() => handleCategorySelect('Medium')}
+          >
+            <div className="category-icon">🟡</div>
+            <h2>Medium</h2>
+            <p>{questions.Medium.length} problems available</p>
+            <div className="category-arrow">→</div>
+          </div>
+
+          <div 
+            className="category-card hard"
+            onClick={() => handleCategorySelect('Hard')}
+          >
+            <div className="category-icon">🔴</div>
+            <h2>Hard</h2>
+            <p>{questions.Hard.length} problems available</p>
+            <div className="category-arrow">→</div>
+          </div>
+        </div>
+
+        <div className="random-question-section">
+          <button className="random-question-btn" onClick={handleRandomQuestion}>
+            <span className="random-icon">🎲</span>
+            <span>Try a Random Question</span>
+          </button>
         </div>
       </div>
+    );
+  }
 
-      {/* DSA Compiler Section */}
-      <div className="compiler-section">
-        <DSACompiler />
-      </div>
+  // Problem List View
+  if (view === 'problems') {
+    const problemList = questions[selectedDifficulty] || [];
+    
+    return (
+      <div className={`practice-container ${isVisible ? 'fade-in' : ''}`}>
+        <div className="practice-header">
+          <div className="header-content">
+            <button className="back-button" onClick={handleBack}>
+              ← Back
+            </button>
+            <h1>{selectedDifficulty} Problems</h1>
+            <p>Select a problem to start coding</p>
+          </div>
+        </div>
 
-      {/* Quick Tips Section */}
-      <div className="tips-section">
-        <h2>Essential Interview Tips</h2>
-        <div className="tips-grid">
-          {interviewTips.map((tip, index) => (
-            <div key={index} className="tip-card">
-              <div className="tip-icon">{tip.icon}</div>
-              <h3>{tip.title}</h3>
-              <p>{tip.description}</p>
-              <ul className="tip-details">
-                {tip.details.map((detail, i) => (
-                  <li key={i}>{detail}</li>
-                ))}
-              </ul>
+        <div className="problems-list">
+          {problemList.map((problem) => (
+            <div key={problem.id} className="problem-item">
+              <div className="problem-info">
+                <h3>{problem.title}</h3>
+                <p className="problem-description-preview">{problem.description.substring(0, 100)}...</p>
+              </div>
+              <button 
+                className="code-it-button"
+                onClick={() => handleProblemSelect(problem)}
+              >
+                Code It
+              </button>
             </div>
           ))}
         </div>
       </div>
+    );
+  }
 
-      {/* Question Categories */}
-      <div className="questions-section">
-        <h2>Practice Questions by Category</h2>
-        
-        {/* Category Tabs */}
-        <div className="category-tabs">
-          {Object.entries(interviewCategories).map(([key, category]) => (
-            <button
-              key={key}
-              className={`tab-button ${activeTab === key ? 'active' : ''}`}
-              onClick={() => setActiveTab(key)}
-            >
-              <span className="tab-icon">{category.icon}</span>
-              <span>{category.title}</span>
+  // Full-Page Question View (for random question)
+  if (view === 'question') {
+    return (
+      <div className={`practice-container question-view ${isVisible ? 'fade-in' : ''}`}>
+        <div className="question-full-page">
+          <div className="question-header-full">
+            <button className="back-button" onClick={handleBack}>
+              ← Back
             </button>
-          ))}
-        </div>
-
-        {/* Active Category Content */}
-        <div className="category-content">
-          <div className="category-header">
-            <h3>{interviewCategories[activeTab].title}</h3>
-            <p>{interviewCategories[activeTab].description}</p>
+            <div className="question-title-section">
+              <h1>{randomQuestion.title}</h1>
+              <span className={`difficulty-badge-full ${
+                questions.Easy.some(q => q.id === randomQuestion.id) ? 'easy' :
+                questions.Medium.some(q => q.id === randomQuestion.id) ? 'medium' : 'hard'
+              }`}>
+                {questions.Easy.some(q => q.id === randomQuestion.id) ? 'Easy' :
+                 questions.Medium.some(q => q.id === randomQuestion.id) ? 'Medium' : 'Hard'}
+              </span>
+            </div>
           </div>
-          
-          <div className="questions-grid">
-            {interviewCategories[activeTab].questions.map((item, index) => (
-              <div key={index} className="question-card">
-                <div className="question-header">
-                  <span className="question-number">{index + 1}</span>
-                  <h4 className="question-text">{item.question}</h4>
-                </div>
-                <div className="question-content">
-                  <div className="question-tips">
-                    <h5>💡 Tips:</h5>
-                    <p>{item.tips}</p>
-                  </div>
-                  <div className="question-sample">
-                    <h5>📝 Sample Start:</h5>
-                    <p className="sample-text">{item.sample}</p>
-                  </div>
-                </div>
+
+          <div className="question-content-full">
+            <div className="question-description-full">
+              <h3>Description</h3>
+              <p>{randomQuestion.description}</p>
+            </div>
+
+            <div className="question-example-full">
+              <h3>Example</h3>
+              <pre>{randomQuestion.example}</pre>
+            </div>
+
+            {randomQuestion.testCases && randomQuestion.testCases.length > 0 && (
+              <div className="question-testcases-full">
+                <h3>Test Cases</h3>
+                <ul>
+                  {randomQuestion.testCases.map((testCase, idx) => (
+                    <li key={idx}>
+                      <strong>Input:</strong> {testCase.input} → <strong>Expected:</strong> {testCase.expected}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            ))}
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Call to Action */}
-      <div className="practice-cta">
-        <div className="cta-content">
-          <h2>Ready to Practice?</h2>
-          <p>Continue exploring interview questions and tips to improve your skills</p>
-          <div className="cta-actions">
-            <Link to="/" className="cta-button secondary large">
-              Back to Home
-            </Link>
+          <div className="question-actions-full">
+            <button className="code-it-button-large" onClick={handleCodeItFromQuestion}>
+              Code It
+            </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Compiler View
+  if (view === 'compiler') {
+    return (
+      <div className={`practice-container ${isVisible ? 'fade-in' : ''}`}>
+        <div className="compiler-header-section">
+          <button className="back-button" onClick={handleBack}>
+            ← Back to Problems
+          </button>
+          <h2>Code Editor</h2>
+        </div>
+        <div className="compiler-section">
+          <DSACompiler initialQuestion={selectedQuestion} />
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default Practice;
